@@ -1,27 +1,40 @@
-def additive_generator(seed1, seed2, m):
-    """
-    Генератор бесконечной последовательности псевдослучайных чисел на основе аддитивного метода.
+class AdditiveRandomGenerator:
+    def __init__(self, seed1, seed2, m):
+        self.state1 = seed1
+        self.state2 = seed2
+        self.m = m
 
-    :param seed1: первое начальное значение
-    :param seed2: второе начальное значение
-    :param m: модуль
-    :yield: следующее значение последовательности
-    """
-    prev1, prev2 = seed1, seed2
-    while True:
-        next_value = (prev1 + prev2) % m
-        yield next_value
-        prev1, prev2 = prev2, next_value
+    def next(self):
+        # Генерируем следующее значение
+        next_value = (self.state1 + self.state2) % self.m
+        # Обновляем состояния
+        self.state1, self.state2 = self.state2, next_value
+        return next_value
 
-# Параметры генератора
-seed1 = 1  # Первое начальное значение
-seed2 = 1  # Второе начальное значение
-m = 100    # Модуль (ограничение диапазона)
+class Encoder:
+    def __init__(self, key_generator):
+        self.key_generator = key_generator
 
-# Создаем генератор
-generator = additive_generator(seed1, seed2, m)
+    def encode(self, text):
+        encoded_text = []
+        for char in text:
+            # Генерируем ключ
+            key = self.key_generator.next()
+            # Кодируем символ с помощью XOR
+            encoded_char = chr(ord(char) ^ key)
+            encoded_text.append(encoded_char)
+        return ''.join(encoded_text)
 
-# Пример использования: вывод первых 20 ключей
-print("Первые 20 ключей:")
-for _ in range(20):
-    print(next(generator), end=" ")
+# Пример использования
+if __name__ == "__main__":
+    seed1 = int(input("Введите первое начальное значение (seed1): "))
+    seed2 = int(input("Введите второе начальное значение (seed2): "))
+    m = int(input("Введите модуль (m): "))
+
+    random_generator = AdditiveRandomGenerator(seed1, seed2, m)
+    encoder = Encoder(random_generator)
+
+    text_to_encode = input("Введите текст для кодирования: ")
+    encoded_text = encoder.encode(text_to_encode)
+
+    print("Закодированный текст:", encoded_text)

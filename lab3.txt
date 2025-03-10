@@ -1,27 +1,25 @@
-def multiplicative_generator(a, m, Y0, n):
-    """
-    Генерация последовательности псевдослучайных чисел с использованием мультипликативного метода.
+class LinearCongruentialGenerator:
+    def __init__(self, seed, a=1664525, c=1013904223, m=2**32):
+        self.state = seed
+        self.a = a
+        self.c = c
+        self.m = m
 
-    :param a: множитель
-    :param m: модуль
-    :param Y0: начальное значение (seed)
-    :param n: количество чисел в последовательности
-    :return: список псевдослучайных чисел
-    """
-    sequence = [Y0]
-    for _ in range(n - 1):
-        next_value = (a * sequence[-1]) % m
-        sequence.append(next_value)
-    return sequence
+    def next(self):
+        # Генерируем следующее значение
+        self.state = (self.a * self.state + self.c) % self.m
+        return self.state
 
-# Параметры
-a = 7
-m = 4096
-Y0 = 502
-n = 10  # Количество чисел в последовательности
+    def generate_sequence(self, n):
+        # Генерируем последовательность из n чисел
+        return [self.next() for _ in range(n)]
 
-# Генерация последовательности
-random_sequence = multiplicative_generator(a, m, Y0, n)
-
-# Вывод результата
-print("Сгенерированная последовательность:", random_sequence)
+# Пример использования
+if __name__ == "__main__":
+    seed = int(input("Введите начальное значение (seed): "))
+    lcg = LinearCongruentialGenerator(seed)
+    
+    n = int(input("Введите количество случайных чисел для генерации: "))
+    random_numbers = lcg.generate_sequence(n)
+    
+    print("Сгенерированные случайные числа:", random_numbers)

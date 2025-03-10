@@ -1,28 +1,46 @@
-pip install pycryptodome
-     ****
+def coding(char, key):
+    """Шифрует символ с использованием ключа."""
+    key_index = ord(key[0]) % len(key) + 1  # Используем первый символ ключа для шифрования
+    return chr(ord(char) + key_index)  # Сдвигаем символ на значение ключа
 
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from Crypto.Random import get_random_bytes
+def decoding(char, key):
+    """Дешифрует символ с использованием ключа."""
+    key_index = ord(key[0]) % len(key) + 1  # Используем первый символ ключа для дешифрования
+    return chr(ord(char) - key_index)  # Возвращаем символ обратно
 
-def encrypt_string(key, plaintext):
-    cipher = AES.new(key, AES.MODE_CBC)
-    iv = cipher.iv
-    ciphertext = cipher.encrypt(pad(plaintext.encode(), AES.block_size))
-    return ciphertext, iv
+def add_password(key, file):
+    """Добавляет зашифрованный пароль в начало файла."""
+    encrypted_password = ''.join(coding(c, key) for c in key)
+    file.write(encrypted_password)
 
-def decrypt_string(key, ciphertext, iv):
-    cipher = AES.new(key, AES.MODE_CBC, iv=iv)
-    plaintext = unpad(cipher.decrypt(ciphertext), AES.block_size)
-    return plaintext.decode()
+def check_password(key, file):
+    """Проверяет правильность введенного пароля."""
+    encrypted_password = file.read(len(key))  # Читаем зашифрованный пароль
+    decrypted_password = ''.join(decoding(c, key) for c in encrypted_password)  # Дешифруем
+    return decrypted_password == key  # Сравниваем с введенным паролем
 
-# Пример использования
-if __name__ == "__main__":
-    plaintext = "Это пример строки"
-    key = get_random_bytes(16)  # Генерация случайного ключа
-    ciphertext, iv = encrypt_string(key, plaintext)
-    decrypted_text = decrypt_string(key, ciphertext, iv)
+def main():
+    input_text = "Hello, World!"  # Исходный текст
+    output_file = 'coding.txt'
+    
+    # Шифрование пароля
+    key = input('Введите пароль для шифрования: ')
+    
+    with open(output_file, 'w') as f:
+        add_password(key, f)  # Добавляем зашифрованный пароль
+        encrypted_text = ''.join(coding(c, key) for c in input_text)  # Шифруем текст
+        f.write(encrypted_text)  # Записываем зашифрованный текст
 
-    print(f"Исходная строка: {plaintext}")
-    print(f"Зашифрованная строка: {ciphertext.hex()}")
-    print(f"Расшифрованная строка: {decrypted_text}")
+    # Проверка пароля
+    with open(output_file, 'r') as f:
+        key_for_decrypt = input('Введите пароль для дешифрования: ')
+        if check_password(key_for_decrypt, f):
+            f.seek(0)  # Возвращаемся в начало файла
+            decrypted_text = f.read()  # Читаем весь файл
+            decrypted_text = ''.join(decoding(c, key) for c in decrypted_text[len(key):])  # Дешифруем текст
+            print('Дешифрованный текст:', decrypted_text)
+        else:
+            print('Пароли не совпадают. Файл не дешифрован.')
+
+if __name__ == '__main__':
+    main()

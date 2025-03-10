@@ -1,65 +1,48 @@
-import math
+def generate_magic_square(n):
+    if n % 2 == 0:
+        raise ValueError("Order must be odd.")
 
-# Функция для шифрования текста с использованием сциталы
-def encrypt_scytale(text, columns):
-    # Убираем пробелы и приводим текст к верхнему регистру
-    text = text.replace(" ", "").upper()
+    magic_square = [[0] * n for _ in range(n)]
+    num = 1
+    i, j = 0, n // 2  # Начинаем с первой строки и центрального столбца
 
-    # Определяем количество строк
-    rows = math.ceil(len(text) / columns)
+    while num <= n * n:
+        magic_square[i][j] = num
+        num += 1
+        new_i, new_j = (i - 1) % n, (j + 1) % n  # Переход вверх и вправо
 
-    # Заполняем таблицу по строкам
-    table = [[" " for _ in range(columns)] for _ in range(rows)]
-    index = 0
+        if magic_square[new_i][new_j]:  # Если ячейка занята
+            i += 1  # Переход вниз
+        else:
+            i, j = new_i, new_j  # Переход на новую позицию
 
-    for i in range(rows):
-        for j in range(columns):
-            if index < len(text):
-                table[i][j] = text[index]
-                index += 1
+    return magic_square
 
-    # Считываем текст по столбцам
+def print_magic_square(square):
+    for row in square:
+        print(" ".join(f"{num:2d}" for num in row))
+
+def encrypt_with_magic_square(text, magic_square):
     encrypted_text = ""
-    for j in range(columns):
-        for i in range(rows):
-            encrypted_text += table[i][j]
-
-    return encrypted_text
-
-
-# Функция для дешифрования текста с использованием сциталы
-def decrypt_scytale(encrypted_text, columns):
-    # Определяем количество строк
-    rows = math.ceil(len(encrypted_text) / columns)
-
-    # Заполняем таблицу по столбцам
-    table = [[" " for _ in range(columns)] for _ in range(rows)]
-    index = 0
-
-    for j in range(columns):
-        for i in range(rows):
-            if index < len(encrypted_text):
-                table[i][j] = encrypted_text[index]
-                index += 1
-
-    # Считываем текст по строкам
-    decrypted_text = ""
-    for i in range(rows):
-        for j in range(columns):
-            decrypted_text += table[i][j]
-
-    return decrypted_text.strip()
-
+    for char in text:
+        if char.isalpha():  # Проверяем, является ли символ буквой
+            index = ord(char.upper()) - ord('A')  # Преобразуем букву в индекс (0-25)
+            row = index // len(magic_square)
+            col = index % len(magic_square)
+            encrypted_text += str(magic_square[row][col]) + " "
+        else:
+            encrypted_text += char  # Оставляем символы, не являющиеся буквами, без изменений
+    return encrypted_text.strip()
 
 # Пример использования
-if __name__ == "__main__":
-    original_text = "СЦИТАЛАЭТОДРЕВНИЙШИФР"
-    columns = 5
+order = int(input("Введите порядок магического квадрата (нечетное число): "))
+try:
+    magic_square = generate_magic_square(order)
+    print("Сгенерированный магический квадрат:")
+    print_magic_square(magic_square)
 
-    print("Оригинальный текст:", original_text)
-
-    encrypted = encrypt_scytale(original_text, columns)
-    print("Зашифрованный текст:", encrypted)
-
-    decrypted = decrypt_scytale(encrypted, columns)
-    print("Расшифрованный текст:", decrypted)
+    text_to_encrypt = input("Введите текст для шифрования: ")
+    encrypted_text = encrypt_with_magic_square(text_to_encrypt, magic_square)
+    print("Зашифрованный текст:", encrypted_text)
+except ValueError as e:
+    print(e)

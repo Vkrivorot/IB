@@ -1,52 +1,67 @@
 import random
 
-# Функция для вычисления возведения в степень по модулю
-def modular_exponentiation(base, exp, mod):
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def is_prime(n):
+    if n <= 1:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+def next_prime(n):
+    while not is_prime(n):
+        n += 1
+    return n
+
+def power_mod(base, exp, mod):
     result = 1
+    base = base % mod
     while exp > 0:
-        if exp % 2 == 1:  # Если степень нечетная
+        if (exp % 2) == 1:  # Если exp нечетное
             result = (result * base) % mod
+        exp = exp >> 1  # Делим exp на 2
         base = (base * base) % mod
-        exp //= 2
     return result
 
-# Генерация ключей
-def generate_keys(p, g):
-    x = random.randint(1, p - 2)  # Секретный ключ
-    y = modular_exponentiation(g, x, p)  # Открытый ключ
-    return x, y
+def elgamal_encrypt(p, g, a, message):
+    y = power_mod(g, a, p)  # Открытый ключ
+    encrypted_message = []
 
-# Шифрование
-def encrypt(p, g, y, M):
-    k = random.randint(1, p - 2)  # Случайное число
-    C1 = modular_exponentiation(g, k, p)
-    C2 = (M * modular_exponentiation(y, k, p)) % p
-    return C1, C2
+    for char in message:
+        k = random.randint(1, p - 2)  # Случайное число k
+        c1 = power_mod(g, k, p)  # c1 = g^k mod p
+        key = power_mod(y, k, p)  # Генерация ключа
+        c2 = ord(char) ^ key  # Шифрование символа
+        encrypted_message.append((c1, c2))
 
-# Расшифрование
-def decrypt(p, x, C1, C2):
-    S = modular_exponentiation(C1, x, p)  # Вычисление общего секрета
-    S_inv = pow(S, -1, p)  # Обратное значение S по модулю p
-    M = (C2 * S_inv) % p
-    return
+    return y, encrypted_message
+
+def elgamal_decrypt(p, a, encrypted_message):
+    decrypted_message = ""
+
+    for c1, c2 in encrypted_message:
+        key = power_mod(c1, a, p)  # Генерация ключа для дешифровки
+        decrypted_char = chr(c2 ^ key)  # Дешифрование символа
+        decrypted_message += decrypted_char
+
+    return decrypted_message
+
+# Пример использования
 if __name__ == "__main__":
-    # Параметры системы
-    p = 467  # Простое число
-    g = 2    # Примитивный корень
+    p = 11  # Простое число
+    g = 3   # Генератор
+    a = 6   # Секретный ключ
 
-    # Генерация ключей
-    x, y = generate_keys(p, g)
-    print(f"Секретный ключ (x): {x}")
-    print(f"Открытый ключ (y): {y}")
+    message = "HELLO"  # Сообщение для шифрования
+    y, encrypted_message = elgamal_encrypt(p, g, a, message)
 
-    # Сообщение для шифрования
-    M = 123
-    print(f"Исходное сообщение (M): {M}")
+    print("Открытый ключ y:", y)
+    print("Зашифрованное сообщение:", encrypted_message)
 
-    # Шифрование
-    C1, C2 = encrypt(p, g, y, M)
-    print(f"Шифртекст (C1, C2): ({C1}, {C2})")
-
-    # Расшифрование
-    decrypted_message = decrypt(p, x, C1, C2)
-    print(f"Расшифрованное сообщение: {decrypted_message}")
+    decrypted_message = elgamal_decrypt(p, a, encrypted_message)
+    print("Дешифрованное сообщение:", decrypted_message)
